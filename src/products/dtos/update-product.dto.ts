@@ -1,16 +1,16 @@
-import { IsNotEmpty, IsString, Length, IsInt, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, Length, Min } from 'class-validator';
 
-export class CreateProductDTO {
+export class UpdateProductDTO {
   @Length(10, 20)
   @IsNotEmpty()
   name: string;
 
   @Min(0)
-  @IsInt()
   @IsNotEmpty()
+  @IsInt()
   price: number;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   description: string;
 }

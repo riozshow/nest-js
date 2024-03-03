@@ -1,7 +1,18 @@
-import { Controller, Delete, Get, Post, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  ParseUUIDPipe,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDTO } from './dtos/create-product.dto';
 import { Product } from 'src/db';
+import { UpdateProductDTO } from './dtos/update-product.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -13,7 +24,7 @@ export class ProductsController {
   }
 
   @Get('/:id')
-  getProduct(@Param('id') id: string) {
+  getProduct(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.productsService.getProduct(id);
   }
 
@@ -22,9 +33,23 @@ export class ProductsController {
     return this.productsService.addProduct(productData);
   }
 
+  @Put('/:id')
+  updateProduct(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() productData: UpdateProductDTO,
+  ) {
+    if (!this.productsService.getProduct(id)) {
+      throw new NotFoundException('Product not found');
+    }
+    return this.productsService.updateProduct(id, productData);
+  }
+
   @Delete('/:id')
-  deleteProduct(@Param('id') id: string) {
-    this.deleteProduct(id);
+  deleteProduct(@Param('id', new ParseUUIDPipe()) id: string) {
+    if (!this.productsService.getProduct(id)) {
+      throw new NotFoundException('Product not found');
+    }
+    this.productsService.deleteProduct(id);
     return { message: 'Success' };
   }
 }
