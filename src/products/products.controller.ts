@@ -10,46 +10,46 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDTO } from './dtos/create-product.dto';
-import { Product } from 'src/db';
-import { UpdateProductDTO } from './dtos/update-product.dto';
+import { Product } from '@prisma/client';
 
 @Controller('products')
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
   @Get('/')
-  getProducts(): Product[] {
+  getProducts() {
     return this.productsService.getAll();
   }
 
   @Get('/:id')
-  getProduct(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.productsService.getProduct(id);
+  async getProduct(@Param('id', new ParseUUIDPipe()) id: string) {
+    const product = await this.productsService.getProduct(id);
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
   }
 
   @Post('/')
-  addProduct(@Body() productData: CreateProductDTO): Product {
+  addProduct(@Body() productData: Product) {
     return this.productsService.addProduct(productData);
   }
 
   @Put('/:id')
-  updateProduct(
+  async updateProduct(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() productData: UpdateProductDTO,
+    @Body() productData: Product,
   ) {
-    if (!this.productsService.getProduct(id)) {
+    if (!(await this.productsService.getProduct(id))) {
       throw new NotFoundException('Product not found');
     }
-    return this.productsService.updateProduct(id, productData);
+    return await this.productsService.updateProduct(id, productData);
   }
 
   @Delete('/:id')
-  deleteProduct(@Param('id', new ParseUUIDPipe()) id: string) {
-    if (!this.productsService.getProduct(id)) {
+  async deleteProduct(@Param('id', new ParseUUIDPipe()) id: string) {
+    if (!(await this.productsService.getProduct(id))) {
       throw new NotFoundException('Product not found');
     }
-    this.productsService.deleteProduct(id);
+    await this.productsService.deleteProduct(id);
     return { message: 'Success' };
   }
 }

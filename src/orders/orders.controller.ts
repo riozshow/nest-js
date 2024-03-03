@@ -9,44 +9,44 @@ import {
   ParseUUIDPipe,
   NotFoundException,
 } from '@nestjs/common';
+import { Order } from '@prisma/client';
 import { OrdersService } from './orders.service';
-import { Order } from 'src/db';
-import { CreateOrderDTO } from './dtos/create-order.dto';
-import { UpdateOrderDTO } from './dtos/update-order.dto';
 
 @Controller('orders')
 export class OrdersController {
   constructor(private ordersService: OrdersService) {}
 
   @Get('/')
-  getOrders(): Order[] {
+  getOrders(): Promise<Order[]> {
     return this.ordersService.getOrders();
   }
 
   @Get('/:id')
-  getOrder(@Param('id') id: string) {
-    return this.ordersService.getOrder(id);
+  async getOrder(@Param('id') id: string) {
+    const order = await this.ordersService.getOrder(id);
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
   }
 
   @Post('/')
-  addOrder(@Body() orderData: CreateOrderDTO): Order {
+  addOrder(@Body() orderData: Order): Promise<Order> {
     return this.ordersService.addOrder(orderData);
   }
 
   @Put('/:id')
-  updateOrder(
+  async updateOrder(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() orderData: UpdateOrderDTO,
+    @Body() orderData: Order,
   ) {
-    if (!this.ordersService.getOrder(id)) {
+    if (!(await this.ordersService.getOrder(id))) {
       throw new NotFoundException('Order not found');
     }
     return this.ordersService.updateOrder(id, orderData);
   }
 
   @Delete('/:id')
-  deleteOrder(@Param('id', new ParseUUIDPipe()) id: string) {
-    if (!this.ordersService.getOrder(id)) {
+  async deleteOrder(@Param('id', new ParseUUIDPipe()) id: string) {
+    if (!(await this.ordersService.getOrder(id))) {
       throw new NotFoundException('Order not found');
     }
     this.ordersService.deleteOrder(id);

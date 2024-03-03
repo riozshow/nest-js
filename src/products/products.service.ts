@@ -1,33 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { Product, db } from 'src/db';
-import { v4 } from 'uuid';
-import { UpdateProductDTO } from './dtos/update-product.dto';
-import { CreateProductDTO } from './dtos/create-product.dto';
+import { PrismaService } from 'src/shared/prisma.service';
+import { Product } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
-  public getAll(): Product[] {
-    return db.products;
+  constructor(private prismaService: PrismaService) {}
+
+  public getAll(): Promise<Product[]> {
+    return this.prismaService.product.findMany();
   }
 
-  public getProduct(id: Product['id']): Product | null {
-    return db.products.find((product) => product.id === id);
+  public getProduct(id: Product['id']): Promise<Product | null> {
+    return this.prismaService.product.findUnique({ where: { id } });
   }
 
-  public deleteProduct(id: Product['id']): void {
-    db.products = db.products.filter((product) => product.id !== id);
+  public deleteProduct(id: Product['id']): Promise<Product> {
+    return this.prismaService.product.delete({ where: { id } });
   }
 
-  public addProduct(product: CreateProductDTO): Product {
-    const newProduct: Product = { ...product, id: v4() };
-    db.products.push(newProduct);
-    return newProduct;
+  public addProduct(product: Product): Promise<Product> {
+    return this.prismaService.product.create({ data: product });
   }
 
-  public updateProduct(id: string, body: UpdateProductDTO): Product {
-    this.deleteProduct(id);
-    const updatedProduct: Product = { id, ...body };
-    db.products.push(updatedProduct);
-    return updatedProduct;
+  public updateProduct(id: string, body: Product): Promise<Product> {
+    return this.prismaService.product.update({ where: { id }, data: body });
   }
 }
