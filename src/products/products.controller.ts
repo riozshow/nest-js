@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from '@prisma/client';
+import { CreateProductDTO } from './dtos/create-product.dto';
+import { UpdateProductDTO } from './dtos/update-product.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -29,14 +31,14 @@ export class ProductsController {
   }
 
   @Post('/')
-  addProduct(@Body() productData: Product) {
+  addProduct(@Body() productData: CreateProductDTO) {
     return this.productsService.addProduct(productData);
   }
 
   @Put('/:id')
   async updateProduct(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() productData: Product,
+    @Body() productData: UpdateProductDTO,
   ) {
     if (!(await this.productsService.getProduct(id))) {
       throw new NotFoundException('Product not found');
